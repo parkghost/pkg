@@ -443,7 +443,7 @@ func DecodeRFC2047Word(s string) (string, error) {
 func decodeRFC2047Word(s string) (string, error) {
 	fields := strings.Split(s, "?")
 	if len(fields) != 5 || fields[0] != "=" || fields[4] != "=" {
-		return "", errors.New("mailfile: address not RFC 2047 encoded")
+		return "", errors.New("mail: address not RFC 2047 encoded")
 	}
 	charset, enc := strings.ToLower(fields[1]), strings.ToLower(fields[2])
 
@@ -455,7 +455,7 @@ func decodeRFC2047Word(s string) (string, error) {
 	case "q":
 		r = qDecoder{r: in}
 	default:
-		return "", fmt.Errorf("mailfile: RFC 2047 encoding not supported: %q", enc)
+		return "", fmt.Errorf("mail: RFC 2047 encoding not supported: %q", enc)
 	}
 
 	dec, err := ioutil.ReadAll(r)
