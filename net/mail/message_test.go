@@ -225,6 +225,15 @@ func TestAddressParsing(t *testing.T) {
 				},
 			},
 		},
+		{
+			`"=?big5?B?wXCmWLlxpGyz+A==?=" <mailman@mx.udnpaper.com>`,
+			[]*Address{
+				{
+					Name:    `聯合電子報`,
+					Address: "mailman@mx.udnpaper.com",
+				},
+			},
+		},
 	}
 	for _, test := range tests {
 		if len(test.exp) == 1 {

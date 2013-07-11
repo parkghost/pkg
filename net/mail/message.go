@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	iconv "github.com/djimenez/iconv-go"
 	"io"
 	"io/ioutil"
 	"log"
@@ -435,15 +436,16 @@ func (p *addrParser) len() int {
 	return len(*p)
 }
 
+func DecodeRFC2047Word(s string) (string, error) {
+	return decodeRFC2047Word(s)
+}
+
 func decodeRFC2047Word(s string) (string, error) {
 	fields := strings.Split(s, "?")
 	if len(fields) != 5 || fields[0] != "=" || fields[4] != "=" {
-		return "", errors.New("mail: address not RFC 2047 encoded")
+		return "", errors.New("mailfile: address not RFC 2047 encoded")
 	}
 	charset, enc := strings.ToLower(fields[1]), strings.ToLower(fields[2])
-	if charset != "iso-8859-1" && charset != "utf-8" {
-		return "", fmt.Errorf("mail: charset not supported: %q", charset)
-	}
 
 	in := bytes.NewBufferString(fields[3])
 	var r io.Reader
@@ -453,7 +455,7 @@ func decodeRFC2047Word(s string) (string, error) {
 	case "q":
 		r = qDecoder{r: in}
 	default:
-		return "", fmt.Errorf("mail: RFC 2047 encoding not supported: %q", enc)
+		return "", fmt.Errorf("mailfile: RFC 2047 encoding not supported: %q", enc)
 	}
 
 	dec, err := ioutil.ReadAll(r)
@@ -470,6 +472,18 @@ func decodeRFC2047Word(s string) (string, error) {
 		return b.String(), nil
 	case "utf-8":
 		return string(dec), nil
+	default:
+		buf := &bytes.Buffer{}
+		writer, err := iconv.NewWriter(buf, charset, "utf-8")
+		if err != nil {
+			return "", err
+		}
+		_, err = writer.Write(dec)
+		if err != nil {
+			return "", err
+		}
+
+		return buf.String(), nil
 	}
 	panic("unreachable")
 }
